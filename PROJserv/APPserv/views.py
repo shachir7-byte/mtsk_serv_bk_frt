@@ -43,7 +43,10 @@ from .forms import ServiceForm
 
 
 def sandbox_page(request):
-    return render(request, 'index.html')
+    from rest_framework.authtoken.models import Token
+    token_obj = Token.objects.filter(user__username='ZMS').first()
+    token_key = token_obj.key if token_obj else ''
+    return render(request, 'index.html', {'zms_token': token_key})
 
 
 @method_decorator(csrf_exempt, name='dispatch')

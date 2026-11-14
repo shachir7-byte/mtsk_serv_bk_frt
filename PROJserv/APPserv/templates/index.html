@@ -7,9 +7,9 @@
 <body style="font-family: monospace; padding: 20px;">
     <h2>Технический пульт проверки бэкенда (APPserv)</h2>
 
-    <div style="margin-bottom: 15px;">
+<div style="margin-bottom: 15px;">
         <label>Token (ZMS):</label>
-        <input type="text" id="tokenInput" value="a9dca90cb7e42ada8ca0ca68d2c3e0383bb5d0b3" style="width: 360px;">
+        <input type="text" id="tokenInput" value="{{ zms_token }}" style="width: 360px;">
         <button onclick="callApi('/api/seed-database/', 'POST')" style="background: #d1fae5; font-weight: bold; cursor: pointer;">
             1. Заполнить БД демо-данными (Seed)
         </button>
