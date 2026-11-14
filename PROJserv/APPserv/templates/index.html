@@ -2,87 +2,646 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>API Test Sandbox - PROJserv</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixMaster — Панель управления СЦ</title>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; background: #f4f5f7; color: #1f2937; font-size: 14px; }
+        header { background: #111827; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .brand { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+        .ws-badge { font-size: 12px; padding: 3px 8px; border-radius: 4px; background: #374151; color: #9ca3af; }
+        .ws-badge.online { background: #065f46; color: #d1fae5; }
+        .top-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .top-controls input { padding: 5px 8px; border-radius: 4px; border: 1px solid #4b5563; background: #1f2937; color: #fff; width: 250px; font-family: monospace; font-size: 12px; }
+        nav { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; gap: 4px; }
+        nav button { background: none; border: none; padding: 12px 16px; cursor: pointer; font-weight: 600; color: #6b7280; border-bottom: 2px solid transparent; }
+        nav button.active { color: #2563eb; border-bottom-color: #2563eb; }
+        main { max-width: 1280px; margin: 20px auto; padding: 0 24px; }
+        .tab-section { display: none; }
+        .tab-section.active { display: block; }
+        .grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+        .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+        .card h3 { margin: 0 0 12px 0; font-size: 15px; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 12px; color: #4b5563; margin-bottom: 4px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px 9px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; }
+        button.btn { padding: 7px 12px; border-radius: 4px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; }
+        button.btn:hover { background: #f9fafb; }
+        button.btn-primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+        button.btn-primary:hover { background: #1d4ed8; }
+        button.btn-success { background: #059669; color: #fff; border-color: #059669; }
+        button.btn-sm { padding: 4px 8px; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+        th { background: #f9fafb; color: #4b5563; font-weight: 600; font-size: 12px; }
+        .badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #e5e7eb; }
+        .badge-in_repair, .badge-diagnostics { background: #dbeafe; color: #1e40af; }
+        .badge-ready, .badge-paid, .badge-active { background: #d1fae5; color: #065f46; }
+        .badge-issued, .badge-disassembled { background: #f3f4f6; color: #374151; }
+        .badge-received, .badge-approval { background: #fef3c7; color: #92400e; }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
+        .toast { position: fixed; bottom: 20px; right: 20px; background: #111827; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 13px; display: none; z-index: 100; }
+        @media (max-width: 900px) { .grid, .grid-2 { grid-template-columns: 1fr; } }
+    </style>
 </head>
-<body style="font-family: monospace; padding: 20px;">
-    <h2>Технический пульт проверки бэкенда (APPserv)</h2>
+<body>
 
-<div style="margin-bottom: 15px;">
-        <label>Token (ZMS):</label>
-        <input type="text" id="tokenInput" value="{{ zms_token }}" style="width: 360px;">
-        <button onclick="callApi('/api/seed-database/', 'POST')" style="background: #d1fae5; font-weight: bold; cursor: pointer;">
-            1. Заполнить БД демо-данными (Seed)
-        </button>
-        <a href="/admin/" target="_blank" style="margin-left: 15px;">Открыть /admin/</a>
+<header>
+    <div class="brand">
+        <span>FixMaster СЦ</span>
+        <span id="wsBadge" class="ws-badge">WS: подключение...</span>
     </div>
-
-    <div style="margin-bottom: 10px;">
-        <strong>Чтение (DRF + Кэш + Ручная сериализация):</strong><br><br>
-        <button onclick="callApi('/api/orders/', 'GET')">GET /api/orders/</button>
-        <button onclick="callApi('/api/clients/', 'GET')">GET /api/clients/</button>
-        <button onclick="callApi('/api/clients/by-phone/?phone=912', 'GET')">GET Поиск по тел (?phone=912)</button>
-        <button onclick="callApi('/api/stock-items/', 'GET')">GET /api/stock-items/</button>
-        <button onclick="callApi('/api/donors/', 'GET')">GET /api/donors/</button>
-        <button onclick="callApi('/api/shifts/', 'GET')">GET /api/shifts/</button>
-        <button onclick="callApi('/api/manual-services/', 'GET')">GET CBV /api/manual-services/</button>
-        <button onclick="callApi('/api/async-supplier-check/', 'GET')">ASYNC aiohttp (3 котировки)</button>
+    <div class="top-controls">
+        <label style="font-size: 12px; color: #9ca3af;">Token:</label>
+        <input type="text" id="tokenInput" value="{{ zms_token }}" placeholder="Вставьте DRF Token ZMS">
+        <button class="btn btn-success btn-sm" onclick="seedDatabase()">Заполнить демо-БД</button>
+        <a href="/admin/" target="_blank" style="color: #93c5fd; font-size: 12px; text-decoration: none; margin-left: 6px;">Админка ↗</a>
     </div>
+</header>
 
-    <div style="margin-bottom: 15px;">
-        <strong>Бизнес-операции (POST @action):</strong><br><br>
-        <button onclick="callApi('/api/payments/apply-donor-credit/', 'POST', {order_id: 1, donor_id: 1})">
-            Зачесть донорский кредит (4000 ₽) в Заказ #1
-        </button>
-        <button onclick="callApi('/api/donors/1/disassemble/', 'POST', {terminal_id: 1, part_ids: [1, 2]})">
-            Разобрать Донор #1 на запчасти (на склад)
-        </button>
-        <button onclick="callApi('/api/orders/1/transition/', 'POST', {status: 'ready', comment: 'Ремонт завершен, протестировано'})">
-            Перевести Заказ #1 в статус Готов (ready)
-        </button>
-        <button onclick="callApi('/api/shifts/1/close/', 'POST', {})">
-            Закрыть кассовую смену #1 (сверка кассы)
-        </button>
-    </div>
+<nav>
+    <button class="active" onclick="switchTab('ordersTab', this)">Заказы и Приём</button>
+    <button onclick="switchTab('clientsTab', this)">Клиенты и Контакты</button>
+    <button onclick="switchTab('stockTab', this)">Склад и Доноры</button>
+    <button onclick="switchTab('financeTab', this)">Касса, Прайс (CBV) и Async</button>
+</nav>
 
-    <div style="margin-bottom: 15px;">
-        <input type="text" id="customUrl" value="/api/orders/period/week/2026-11-01/" style="width: 340px;">
-        <button onclick="callApi(document.getElementById('customUrl').value, 'GET')">Выполнить GET</button>
-    </div>
+<main>
+    <section id="ordersTab" class="tab-section active">
+        <div class="grid">
+            <div class="card">
+                <h3>Новый заказ-наряд</h3>
+                <form onsubmit="createOrder(event)">
+                    <div class="form-group">
+                        <label>Клиент</label>
+                        <select id="orderClientSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Устройство (Экземпляр)</label>
+                        <select id="orderDeviceSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Точка приёма (Терминал)</label>
+                        <select id="orderTerminalSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Приёмщик / Сотрудник</label>
+                        <select id="orderEmployeeSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Скидка (₽)</label>
+                        <input type="number" id="orderDiscount" value="0" step="50">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Оформить заказ</button>
+                </form>
+            </div>
 
-    <div style="margin-bottom: 15px;">
-        <strong>WebSocket тест (ws/orders/):</strong>
-        <button onclick="sendWs()">Отправить статус через WS</button>
-        <span id="wsOutput">Ожидание...</span>
-    </div>
+            <div class="card">
+                <div class="toolbar">
+                    <h3 style="margin: 0; border: none; padding: 0;">Журнал заказов</h3>
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <input type="date" id="periodDate" value="2026-11-10" style="padding: 4px 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px;">
+                        <button class="btn btn-sm" onclick="loadOrdersByPeriod('week')">За неделю</button>
+                        <button class="btn btn-sm" onclick="loadOrdersByPeriod('month')">За месяц</button>
+                        <button class="btn btn-sm" onclick="loadOrdersByPeriod('year')">За год</button>
+                        <button class="btn btn-primary btn-sm" onclick="loadOrders()">Все заказы</button>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Клиент / Аппарат</th>
+                            <th>Работы и Запчасти</th>
+                            <th>Финансы</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 
-    <pre id="responseBox" style="background: #f0f0f0; padding: 15px; border: 1px solid #ccc; min-height: 260px; white-space: pre-wrap;"></pre>
+    <section id="clientsTab" class="tab-section">
+        <div class="grid">
+            <div>
+                <div class="card">
+                    <h3>Добавить клиента</h3>
+                    <form onsubmit="createClient(event)">
+                        <div class="form-group">
+                            <label>ФИО или Название компании</label>
+                            <input type="text" id="clientName" required placeholder="Петров Иван">
+                        </div>
+                        <div class="form-group">
+                            <label>Тип клиента</label>
+                            <select id="clientType">
+                                <option value="individual">Физическое лицо</option>
+                                <option value="legal">Юридическое лицо</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Телефон</label>
+                            <input type="text" id="clientPhone" required placeholder="+79001234567">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Сохранить клиента</button>
+                    </form>
+                </div>
 
-    <script>
-        async function callApi(url, method, bodyObj = null) {
-            const token = document.getElementById('tokenInput').value.trim();
-            const options = {
-                method: method,
-                headers: {
-                    'Authorization': 'Token ' + token,
-                    'Content-Type': 'application/json'
-                }
-            };
-            if (bodyObj) {
-                options.body = JSON.stringify(bodyObj);
-            }
-            const res = await fetch(url, options);
-            const data = await res.json();
-            document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2);
+                <div class="card">
+                    <h3>Добавить устройство клиенту</h3>
+                    <form onsubmit="createDeviceUnit(event)">
+                        <div class="form-group">
+                            <label>Владелец</label>
+                            <select id="unitClientSelect" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Модель (Справочник)</label>
+                            <select id="unitModelSelect" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>IMEI</label>
+                            <input type="text" id="unitImei" required placeholder="354890001122334">
+                        </div>
+                        <div class="form-group">
+                            <label>Цвет</label>
+                            <input type="text" id="unitColor" value="Black">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Зарегистрировать аппарат</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="toolbar">
+                    <h3 style="margin: 0; border: none; padding: 0;">База клиентов</h3>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="phoneSearchInput" placeholder="Поиск по телефону (912)..." style="padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px;">
+                        <button class="btn btn-sm" onclick="searchClientByPhone()">Найти</button>
+                        <button class="btn btn-sm" onclick="loadClients()">Сброс</button>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Имя / Наименование</th>
+                            <th>Тип</th>
+                            <th>Метки</th>
+                            <th>Контакты</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="stockTab" class="tab-section">
+        <div class="grid-2">
+            <div class="card">
+                <div class="toolbar">
+                    <h3 style="margin: 0; border: none; padding: 0;">Остатки запчастей на складе</h3>
+                    <button class="btn btn-sm" onclick="loadStock()">Обновить</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Точка</th>
+                            <th>Запчасть</th>
+                            <th>В наличии</th>
+                            <th>Резерв</th>
+                            <th>Доступно</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="toolbar">
+                    <h3 style="margin: 0; border: none; padding: 0;">Аппараты-доноры</h3>
+                    <button class="btn btn-sm" onclick="loadDonors()">Обновить</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Устройство</th>
+                            <th>Статус</th>
+                            <th>Кредит (₽)</th>
+                            <th>Действия с донором</th>
+                        </tr>
+                    </thead>
+                    <tbody id="donorsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="financeTab" class="tab-section">
+        <div class="grid-2">
+            <div>
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0; border: none; padding: 0;">Кассовые смены (Shift)</h3>
+                        <button class="btn btn-sm" onclick="loadShifts()">Обновить</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Открыта</th>
+                                <th>Старт кассы</th>
+                                <th>Итог кассы</th>
+                                <th>Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shiftsTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>Асинхронная котировка запчастей (aiohttp + gather)</h3>
+                    <p style="font-size: 12px; color: #6b7280; margin-top: 0;">Параллельный опрос 3 поставщиков за ~1 секунду без блокировки потока.</p>
+                    <button class="btn btn-primary btn-sm" onclick="checkAsyncSuppliers()">Запросить котировки</button>
+                    <div id="asyncResultBox" style="margin-top: 10px; font-family: monospace; font-size: 13px; background: #f9fafb; padding: 10px; border: 1px solid #e5e7eb; border-radius: 4px;">
+                        Нажмите кнопку для запуска...
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Каталог услуг (Ручная сериализация CBV + ModelForm)</h3>
+                <form onsubmit="createManualService(event)" style="display: grid; grid-template-columns: 1fr 2fr 1fr auto; gap: 8px; margin-bottom: 14px;">
+                    <input type="text" id="srvCode" placeholder="Код (SRV-01)" required style="padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <input type="text" id="srvTitle" placeholder="Название услуги" required style="padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <input type="number" id="srvPrice" placeholder="Цена ₽" required style="padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <button type="submit" class="btn btn-primary btn-sm">Добавить</button>
+                </form>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Код</th>
+                            <th>Услуга</th>
+                            <th>Категория</th>
+                            <th>Базовая цена</th>
+                        </tr>
+                    </thead>
+                    <tbody id="servicesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div id="toastBox" class="toast"></div>
+
+<script>
+    let ws = null;
+
+    function showToast(msg) {
+        const box = document.getElementById('toastBox');
+        box.textContent = msg;
+        box.style.display = 'block';
+        setTimeout(() => { box.style.display = 'none'; }, 3000);
+    }
+
+    function getHeaders() {
+        const token = document.getElementById('tokenInput').value.trim();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+            headers['Authorization'] = 'Token ' + token;
         }
+        return headers;
+    }
 
-        let ws = new WebSocket('ws://' + window.location.host + '/ws/orders/');
-        ws.onmessage = (message) => {
-            document.getElementById('wsOutput').textContent = message.data;
+    async function apiRequest(url, method = 'GET', body = null) {
+        const options = { method, headers: getHeaders() };
+        if (body) options.body = JSON.stringify(body);
+        const res = await fetch(url, options);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            showToast('Ошибка: ' + (data.detail || JSON.stringify(data)));
+            throw new Error(data.detail || 'API Error');
+        }
+        return data;
+    }
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function initWebSocket() {
+        const proto = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        ws = new WebSocket(proto + window.location.host + '/ws/orders/');
+        const badge = document.getElementById('wsBadge');
+
+        ws.onopen = () => {
+            badge.textContent = 'WS: онлайн';
+            badge.classList.add('online');
         };
+        ws.onmessage = (e) => {
+            const payload = JSON.parse(e.data);
+            showToast(`WS Событие: Заказ #${payload.order_id} -> статус "${payload.status}"`);
+            loadOrders();
+        };
+        ws.onclose = () => {
+            badge.textContent = 'WS: отключен';
+            badge.classList.remove('online');
+        };
+    }
 
-        function sendWs() {
-            ws.send(JSON.stringify({ order_id: 1, status: 'ready' }));
+    async function seedDatabase() {
+        const data = await apiRequest('/api/seed-database/', 'POST', {});
+        showToast(data.message);
+        await loadAllData();
+    }
+
+    async function loadOrders(customUrl = '/api/orders/') {
+        const orders = await apiRequest(customUrl);
+        const tbody = document.getElementById('ordersTableBody');
+        if (!orders.length) {
+            tbody.innerHTML = '<tr><td colspan="6">Заказов не найдено. Нажмите «Заполнить демо-БД».</td></tr>';
+            return;
         }
-    </script>
+        tbody.innerHTML = orders.map(o => {
+            const worksList = (o.works || []).map(w => `<div>• ${w.service_title} (${w.price} ₽)</div>`).join('');
+            const partsList = (o.installed_parts || []).map(p => `<div>+ ${p.part_name} (${p.price} ₽)</div>`).join('');
+            return `
+                <tr>
+                    <td><strong>#${o.id}</strong></td>
+                    <td>
+                        <div><strong>${o.client_detail?.full_name || 'Клиент #' + o.client}</strong></div>
+                        <div style="font-size:12px; color:#6b7280;">${o.device_detail?.model_detail?.brand || ''} ${o.device_detail?.model_detail?.model_name || ''} (${o.device_detail?.imei || ''})</div>
+                    </td>
+                    <td style="font-size:12px;">${worksList}${partsList || '<span style="color:#9ca3af;">Нет позиций</span>'}</td>
+                    <td>
+                        <div>Итого: <strong>${o.calculated_total} ₽</strong></div>
+                        <div style="font-size:12px; color:#059669;">Оплачено: ${o.paid_total} ₽</div>
+                        <div style="font-size:12px; color:${o.balance_due > 0 ? '#dc2626' : '#6b7280'};">Долг: ${o.balance_due} ₽</div>
+                    </td>
+                    <td><span class="badge badge-${o.status}">${o.status}</span></td>
+                    <td style="display:flex; gap:4px; flex-wrap:wrap;">
+                        <select onchange="changeOrderStatus(${o.id}, this.value)" style="font-size:12px; padding:3px;">
+                            <option value="">Сменить статус...</option>
+                            <option value="diagnostics">На диагностике</option>
+                            <option value="in_repair">В ремонте</option>
+                            <option value="ready">Готов к выдаче</option>
+                            <option value="issued">Выдан клиенту</option>
+                        </select>
+                        ${o.balance_due > 0 ? `<button class="btn btn-sm" onclick="payOrderBalance(${o.id}, ${o.balance_due})">Оплатить ${o.balance_due} ₽</button>` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    async function loadOrdersByPeriod(period) {
+        const fromDate = document.getElementById('periodDate').value;
+        await loadOrders(`/api/orders/period/${period}/${fromDate}/`);
+    }
+
+    async function changeOrderStatus(orderId, newStatus) {
+        if (!newStatus) return;
+        await apiRequest(`/api/orders/${orderId}/transition/`, 'POST', {
+            status: newStatus,
+            comment: 'Смена статуса через панель оператора'
+        });
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ order_id: orderId, status: newStatus }));
+        } else {
+            loadOrders();
+        }
+    }
+
+    async function payOrderBalance(orderId, amount) {
+        await apiRequest('/api/payments/', 'POST', {
+            order: orderId,
+            amount: amount,
+            currency: 'RUB',
+            method: 'card'
+        });
+        showToast(`Оплата ${amount} ₽ по заказу #${orderId} проведена!`);
+        loadOrders();
+    }
+
+    async function createOrder(e) {
+        e.preventDefault();
+        await apiRequest('/api/orders/', 'POST', {
+            client: parseInt(document.getElementById('orderClientSelect').value),
+            device_unit: parseInt(document.getElementById('orderDeviceSelect').value),
+            terminal: parseInt(document.getElementById('orderTerminalSelect').value),
+            accepted_by: parseInt(document.getElementById('orderEmployeeSelect').value),
+            status: 'received',
+            discount_amount: document.getElementById('orderDiscount').value
+        });
+        showToast('Новый заказ-наряд создан!');
+        loadOrders();
+    }
+
+    async function loadClients(customUrl = '/api/clients/') {
+        const clients = await apiRequest(customUrl);
+        const tbody = document.getElementById('clientsTableBody');
+        tbody.innerHTML = clients.map(c => `
+            <tr>
+                <td>#${c.id}</td>
+                <td><strong>${c.full_name}</strong></td>
+                <td>${c.client_type === 'legal' ? 'Юрлицо' : 'Физлицо'}</td>
+                <td>${(c.tags_detail || []).map(t => `<span class="badge">${t.title}</span>`).join(' ')}</td>
+                <td style="font-size:12px;">${(c.contacts || []).map(cnt => `${cnt.channel}: <strong>${cnt.value}</strong>`).join('<br>')}</td>
+            </tr>
+        `).join('');
+
+        const clientOptions = clients.map(c => `<option value="${c.id}">${c.full_name}</option>`).join('');
+        document.getElementById('orderClientSelect').innerHTML = clientOptions;
+        document.getElementById('unitClientSelect').innerHTML = clientOptions;
+    }
+
+    async function searchClientByPhone() {
+        const phone = document.getElementById('phoneSearchInput').value.trim();
+        if (!phone) return loadClients();
+        await loadClients(`/api/clients/by-phone/?phone=${encodeURIComponent(phone)}`);
+    }
+
+    async function createClient(e) {
+        e.preventDefault();
+        const client = await apiRequest('/api/clients/', 'POST', {
+            full_name: document.getElementById('clientName').value,
+            client_type: document.getElementById('clientType').value
+        });
+        await apiRequest('/api/client-contacts/', 'POST', {
+            client: client.id,
+            channel: 'phone',
+            kind: 'personal',
+            value: document.getElementById('clientPhone').value,
+            is_primary: true
+        });
+        e.target.reset();
+        showToast('Клиент и контакт сохранены!');
+        loadClients();
+    }
+
+    async function createDeviceUnit(e) {
+        e.preventDefault();
+        await apiRequest('/api/device-units/', 'POST', {
+            client: parseInt(document.getElementById('unitClientSelect').value),
+            device_model: parseInt(document.getElementById('unitModelSelect').value),
+            imei: document.getElementById('unitImei').value,
+            color: document.getElementById('unitColor').value,
+            ownership_status: 'own'
+        });
+        e.target.reset();
+        showToast('Аппарат добавлен в базу!');
+        loadDictionaries();
+    }
+
+    async function loadStock() {
+        const items = await apiRequest('/api/stock-items/');
+        document.getElementById('stockTableBody').innerHTML = items.map(s => `
+            <tr>
+                <td>Точка #${s.terminal}</td>
+                <td><strong>${s.part_name}</strong></td>
+                <td>${s.quantity_in} шт.</td>
+                <td>${s.quantity_reserved} шт.</td>
+                <td><span class="badge badge-ready">${s.available_qty} шт.</span></td>
+            </tr>
+        `).join('');
+    }
+
+    async function loadDonors() {
+        const donors = await apiRequest('/api/donors/');
+        document.getElementById('donorsTableBody').innerHTML = donors.map(d => `
+            <tr>
+                <td>#${d.id}</td>
+                <td>${d.device_detail?.model_detail?.brand || ''} ${d.device_detail?.model_detail?.model_name || ''} (${d.device_detail?.serial_number || ''})</td>
+                <td><span class="badge badge-${d.status}">${d.status}</span></td>
+                <td><strong>${d.donor_credit} ₽</strong></td>
+                <td style="display:flex; gap:4px; flex-wrap:wrap;">
+                    ${d.status === 'received' ? `<button class="btn btn-sm" onclick="disassembleDonor(${d.id})">Разобрать на склад</button>` : ''}
+                    ${parseFloat(d.donor_credit) > 0 ? `<button class="btn btn-primary btn-sm" onclick="applyDonorCredit(${d.id})">Зачесть в Заказ #1</button>` : ''}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function disassembleDonor(donorId) {
+        await apiRequest(`/api/donors/${donorId}/disassemble/`, 'POST', {
+            terminal_id: 1,
+            part_ids: [1, 2]
+        });
+        showToast(`Донор #${donorId} разобран, детали оприходованы на склад!`);
+        loadDonors();
+        loadStock();
+    }
+
+    async function applyDonorCredit(donorId) {
+        await apiRequest('/api/payments/apply-donor-credit/', 'POST', {
+            order_id: 1,
+            donor_id: donorId
+        });
+        showToast('Кредит донора зачтен в оплату Заказа #1!');
+        loadDonors();
+        loadOrders();
+    }
+
+    async function loadShifts() {
+        const shifts = await apiRequest('/api/shifts/');
+        document.getElementById('shiftsTableBody').innerHTML = shifts.map(sh => `
+            <tr>
+                <td>#${sh.id}</td>
+                <td>${new Date(sh.started_at).toLocaleString('ru-RU')}</td>
+                <td>${sh.opening_cash} ₽</td>
+                <td><strong>${sh.closing_cash ? sh.closing_cash + ' ₽' : 'Открыта'}</strong></td>
+                <td>
+                    ${!sh.ended_at ? `<button class="btn btn-primary btn-sm" onclick="closeShift(${sh.id})">Закрыть смену</button>` : '<span class="badge">Закрыта</span>'}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function closeShift(shiftId) {
+        await apiRequest(`/api/shifts/${shiftId}/close/`, 'POST', {});
+        showToast(`Кассовая смена #${shiftId} закрыта и сверена!`);
+        loadShifts();
+    }
+
+    async function loadManualServices() {
+        const data = await apiRequest('/api/manual-services/');
+        document.getElementById('servicesTableBody').innerHTML = (data.services || []).map(s => `
+            <tr>
+                <td><code>${s.code}</code></td>
+                <td><strong>${s.title}</strong></td>
+                <td>${s.category}</td>
+                <td>${s.base_price} ₽</td>
+            </tr>
+        `).join('');
+    }
+
+    async function createManualService(e) {
+        e.preventDefault();
+        await apiRequest('/api/manual-services/', 'POST', {
+            code: document.getElementById('srvCode').value,
+            title: document.getElementById('srvTitle').value,
+            category: 'Ремонт',
+            base_price: document.getElementById('srvPrice').value,
+            standard_duration_minutes: 60
+        });
+        e.target.reset();
+        showToast('Услуга добавлена через CBV ModelForm!');
+        loadManualServices();
+    }
+
+    async function checkAsyncSuppliers() {
+        const box = document.getElementById('asyncResultBox');
+        box.textContent = 'Запрос к 3 поставщикам через aiohttp...';
+        const data = await apiRequest('/api/async-supplier-check/');
+        box.textContent = `Котировки: [${data.quotes.join(', ')}] ₽ | Сумма: ${data.sum} ₽ | Средняя цена: ${data.average_part_cost} ₽`;
+    }
+
+    async function loadDictionaries() {
+        const [units, models, terminals, employees] = await Promise.all([
+            apiRequest('/api/device-units/'),
+            apiRequest('/api/device-models/'),
+            apiRequest('/api/terminals/'),
+            apiRequest('/api/employees/')
+        ]);
+
+        document.getElementById('orderDeviceSelect').innerHTML = units.map(u =>
+            `<option value="${u.id}">${u.model_detail?.brand || ''} ${u.model_detail?.model_name || ''} (${u.imei || u.serial_number})</option>`
+        ).join('');
+        document.getElementById('unitModelSelect').innerHTML = models.map(m =>
+            `<option value="${m.id}">${m.brand} ${m.model_name}</option>`
+        ).join('');
+        document.getElementById('orderTerminalSelect').innerHTML = terminals.map(t =>
+            `<option value="${t.id}">${t.name}</option>`
+        ).join('');
+        document.getElementById('orderEmployeeSelect').innerHTML = employees.map(emp =>
+            `<option value="${emp.id}">${emp.full_name}</option>`
+        ).join('');
+    }
+
+    async function loadAllData() {
+        try {
+            await Promise.all([
+                loadOrders(),
+                loadClients(),
+                loadDictionaries(),
+                loadStock(),
+                loadDonors(),
+                loadShifts(),
+                loadManualServices()
+            ]);
+        } catch (e) {}
+    }
+
+    initWebSocket();
+    loadAllData();
+</script>
 </body>
 </html>
