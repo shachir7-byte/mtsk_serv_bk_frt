@@ -11,7 +11,7 @@ from django.views.decorators.cache import cache_page, never_cache
 from django.db import transaction
 from django.db.models import Sum
 from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action, api_view, authentication_classes, permission_classes
@@ -34,16 +34,11 @@ from .serializers import (
     DeviceUnitSerializer, DeviceBundleSerializer, ServiceSerializer,
     PartSerializer, StockItemSerializer, RepairOrderSerializer,
     DiagnosisSerializer, RepairWorkSerializer, InstalledPartSerializer,
-    DonorSerializer, StockMovementSerializer, PaymentSerializer,
-    LedgerEntrySerializer, DocumentSerializer, WarrantySerializer,
-    WarrantyCaseSerializer, OrderEventSerializer
+    DonorSerializer, PaymentSerializer, DocumentSerializer,
+    WarrantySerializer, WarrantyCaseSerializer
 )
 from .permissions import IsEmployeeOrStaffPermission
 from .forms import ServiceForm
-
-
-def sandbox_page(request):
-    return render(request, 'index.html')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -131,7 +126,7 @@ async def async_supplier_check(request):
 def seed_database(request):
     with transaction.atomic():
         t1, _ = Terminal.objects.get_or_create(
-            name='FixMaster Центр (ул. Ленина, 15)',
+            name='zmart-serv Центр (ул. Ленина, 15)',
             defaults={
                 'address': 'г. Сургут, ул. Ленина, 15',
                 'coordinates': '61.254035, 73.396221',
@@ -141,7 +136,7 @@ def seed_database(request):
             }
         )
         t2, _ = Terminal.objects.get_or_create(
-            name='FixMaster ТРЦ Сити Молл',
+            name='zmart-serv ТРЦ Сити Молл',
             defaults={
                 'address': 'г. Сургут, Югорский тракт, 38',
                 'coordinates': '61.239110, 73.374890',
@@ -419,7 +414,7 @@ def seed_database(request):
 
     return Response({
         'status': 'success',
-        'message': 'База данных успешно заполнена демо-данными сервисного центра!',
+        'message': 'База данных zmart-serv успешно заполнена демо-данными!',
         'created_order_id': order1.id,
         'donor_id': donor_obj.id,
         'shift_id': shift.id
@@ -647,13 +642,13 @@ class RepairOrderViewSet(ModelViewSet):
     @action(methods=['GET'], detail=False, url_path='period/(?P<period>week|month|year)/(?P<from_date>[^/.]+)')
     def orders_by_period(self, request, period=None, from_date=None):
         try:
-            start_dt = datetime.fromisoformat(from_date)
+            start_dt = datetime.fromisoformat(from_date).date()
         except ValueError:
             raise ValidationError({'detail': 'Неверный формат даты, используйте YYYY-MM-DD'})
 
         days_map = {'week': 7, 'month': 30, 'year': 365}
         end_dt = start_dt + timedelta(days=days_map[period])
-        orders = self.get_queryset().filter(created_at__gte=start_dt, created_at__lt=end_dt)
+        orders = self.get_queryset().filter(created_at__date__gte=start_dt, created_at__date__lt=end_dt)
         serializer = self.get_serializer(orders, many=True)
         return Response(serializer.data)
 

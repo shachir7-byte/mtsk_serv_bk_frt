@@ -4,7 +4,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 class OrderStatusConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        await self. accept()
+        await self.accept()
 
     async def receive(self, text_data=None, bytes_data=None):
         payload = json.loads(text_data) if text_data else {}

@@ -6,8 +6,7 @@ from .models import (
     ClientLegalInfo, DeviceModel, DeviceUnit, DeviceSnapshot,
     Service, Part, StockItem, RepairOrder, DeviceBundle,
     Diagnosis, RepairWork, InstalledPart, Donor, StockMovement,
-    Payment, PaymentCashDetail, PaymentCardDetail, PaymentSBPDetail,
-    LedgerEntry, Document, Warranty, WarrantyCase, OrderEvent
+    Payment, LedgerEntry, Document, Warranty, WarrantyCase, OrderEvent
 )
 
 
@@ -211,6 +210,7 @@ class RepairOrderSerializer(serializers.ModelSerializer):
 
     def get_balance_due(self, obj):
         return self.get_calculated_total(obj) - self.get_paid_total(obj)
+
 
 class DonorSerializer(serializers.ModelSerializer):
     device_detail = DeviceUnitSerializer(source='device_unit', read_only=True)

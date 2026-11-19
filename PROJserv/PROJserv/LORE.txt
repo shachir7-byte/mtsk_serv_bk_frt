@@ -1,74 +1,116 @@
 ===================================================================
-ЛОР ПРОЕКТА: СЕРВИСНЫЙ ЦЕНТР ПО РЕМОНТУ МОБИЛЬНЫХ УСТРОЙСТВ
-Проект: PROJserv | Приложение: APPserv
-Масштаб: Локальный сервисный центр (2-10 сотрудников, 1-3 точки)
+ЛОР ПРОЕКТА: ВЕБ-ПРИЛОЖЕНИЕ СЕРВИСНОГО ЦЕНТРА «zmart-serv»
+Репозиторий: https://github.com/shachir7-byte/mtsk_serv_bk_frt (main)
+Бэкенд: PROJserv (APPserv) | Фронтенд: FRONTserv (APPfront)
+Масштаб: Локальный сервисный центр по ремонту мобильных устройств
 ===================================================================
 
-[0. ДОСТУПЫ И УЧЕТКИ ДЛЯ РАЗРАБОТКИ]
-- Superuser логин: ZMS
-- Superuser пароль: ZMS
-- DRF Token (TokenAuthentication): a9dca90cb7e42ada8ca0ca68d2c3e0383bb5d0b3
-- Заголовок для запросов: Authorization: Token a9dca90cb7e42ada8ca0ca68d2c3e0383bb5d0b3
+[0. ДОСТУПЫ И ЗАПУСК]
+- Superuser логин / пароль: ZMS / ZMS (создаётся автоматически при старте)
+- Автовывод актуального DRF-токена в консоль при старте Uvicorn (APPserv/apps.py)
+- Бэкенд (порт 8000, .venv): uvicorn PROJserv.asgi:application --port 8000 --reload
+- Фронтенд (порт 8001, .venv_front): python manage.py runserver 8001
+- Автотесты бэкенда: python manage.py test
 
 -------------------------------------------------------------------
-[1. ЭТАП 1: ПРОЕКТИРОВАНИЕ ЯДРА И БАЗЫ ДАННЫХ (models.py)]
-В основу положены 7 правил нормализации под реальный путь транзакции:
+[1. ЭТАП 1: ЯДРО И БАЗА ДАННЫХ (PROJserv/APPserv/models.py)]
+В основу положен жизненный цикл ремонта:
 Приём -> Диагностика -> Согласование -> Ремонт -> Оплата -> Выдача.
 
-Ключевые архитектурные решения:
+Ключевые решения (28 моделей):
 1. Разделение уровней устройства:
-   - DeviceModel: справочник ("iPhone 13 128GB").
+   - DeviceModel: справочник моделей ("iPhone 13 Pro 128GB").
    - DeviceUnit: конкретный аппарат клиента или донор (IMEI, серийник).
    - DeviceSnapshot: техпаспорт состояния (плата, память, АКБ %, iCloud/FRP).
-   - DeviceBundle: комплектация при конкретном приёме (чехол, симка, коробка, фото), привязана к заказу RepairOrder, чтобы не затираться при повторных обращениях.
+   - DeviceBundle: комплектация при конкретном приёме, привязана к RepairOrder.
 2. Заказ-наряд (RepairOrder) без хранимой суммы total:
-   - Итоговая стоимость (calculated_total), оплачено (paid_total) и долг (balance_due) считаются динамически через агрегацию Sum() по выполненным работам (RepairWork) и установленным запчастям (InstalledPart) минус скидка.
-3. Склад и запчасти (Part, StockItem, StockMovement, InstalledPart):
-   - Учет остатков ведется по точкам (Terminal). Установка запчасти в заказ атомарно списывает 1 шт. со склада и пишет историю в StockMovement.
+   - calculated_total, paid_total и balance_due вычисляются динамически через Sum()
+     по работам (RepairWork), запчастям (InstalledPart) и оплатам (Payment) минус скидка.
+3. Склад и доноры (Part, StockItem, StockMovement, InstalledPart, Donor):
+   - Учет остатков по точкам (Terminal), атомарное списание через select_for_update().
 
 -------------------------------------------------------------------
-[2. ЭТАП 2: ПАТТЕРНЫ REST API ПО МАТЕРИАЛАМ ЛЕКЦИЙ (views.py, urls.py)]
-1. Иерархичность и правила URL (Часть 1 конспекта):
-   - Конечные множества вынесены в путь URL: /api/orders/period/{week|month|year}/{from_date}/
-   - Нефиксированные фильтры и поиск вынесены в query-параметры: /api/clients/by-phone/?phone=...
-2. DRF Компоненты (Часть 5 конспекта):
-   - ModelSerializer в serializers.py.
-   - ModelViewSet для всех моделей + автогенерация маршрутов через DefaultRouter.
-   - Точки расширения perform_create() для бизнес-проверок и автосоздания событий OrderEvent.
-   - Кастомные ручки через декоратор @action (detail=True и detail=False).
-3. Кэширование HTTP (Часть 3 конспекта):
-   - Справочники (DeviceModel, Service) кэшируются на 15 минут через @cache_page(60 * 15).
-   - Динамические таблицы (RepairOrder, Payment, Shift) защищены от кэша через @never_cache.
-4. Аутентификация и права (Часть 7 конспекта):
-   - Подключены TokenAuthentication и SessionAuthentication.
-   - Кастомный класс IsEmployeeOrStaffPermission (наследник BasePermission) проверяет has_permission и has_object_permission (привязка сотрудника к точке Terminal).
+[2. ЭТАП 2: REST API ПО ПРОГРАММЕ КУРСА (views.py, urls.py, serializers.py)]
+1. REST-проектирование:
+   - Конечные множества в пути: /api/orders/period/{week|month|year}/{from_date}/
+   - Фильтры поиска в query-параметрах: /api/clients/by-phone/?phone=...
+2. DRF-стек:
+   - ModelSerializer, ModelViewSet, DefaultRouter, perform_create(), @action.
+3. Кэширование HTTP:
+   - @cache_page(60 * 15) для справочников (DeviceModel, Service).
+   - @never_cache для динамических данных (RepairOrder, Payment, Shift).
+4. Безопасность:
+   - TokenAuthentication + SessionAuthentication.
+   - Кастомный IsEmployeeOrStaffPermission (BasePermission: has_permission + has_object_permission).
 
 -------------------------------------------------------------------
-[3. ЭТАП 3: БИЗНЕС-УЗЛЫ, АСИНХРОННОСТЬ И WEBSOCKET]
-1. Финансовый контур и кассовые смены (Shift + Payment + LedgerEntry):
-   - Оплата автоматически формирует двойную проводку в LedgerEntry (дебет кассы / кредит выручки).
-   - Ручка возврата (/api/payments/{id}/refund/) оформляет возврат и обратную проводку.
-   - Ручка зачёта донора (/api/payments/apply-donor-credit/) засчитывает стоимость выкупленного донора (donor_credit) в счёт оплаты ремонта.
-   - Закрытие смены (/api/shifts/{id}/close/) сверяет наличные платежи за смену и фиксирует closing_cash.
+[3. ЭТАП 3: БИЗНЕС-ЛОГИКА, ASYNC И WEBSOCKET]
+1. Финансы (PaymentViewSet + ShiftViewSet + LedgerEntry):
+   - Двойная проводка в LedgerEntry при оплате и возврате (/api/payments/{id}/refund/).
+   - Зачёт кредита донора (/api/payments/apply-donor-credit/).
+   - Закрытие и сверка кассовой смены (/api/shifts/{id}/close/).
 2. Разбор доноров (/api/donors/{id}/disassemble/):
-   - Переводит аппарат-донор в статус disassembled, приходует снятые живые запчасти на склад точки (StockItem) и создает движения StockMovement (incoming).
-3. Асинхронный опрос поставщиков (Часть 4 конспекта - async def + aiohttp):
-   - Ручка /api/async-supplier-check/ использует aiohttp.ClientSession и asyncio.gather() для параллельного неблокирующего получения 3 котировок/чисел за ~1 сек вместо 3 сек.
-4. Живые уведомления (Часть 6 конспекта - Django Channels + WebSocket):
-   - В asgi.py настроен ProtocolTypeRouter (http + websocket).
-   - OrderStatusConsumer на маршруте ws/orders/ рассылает обновления статусов без перезагрузки.
-===================================================================
+   - Оприходование снятых запчастей на склад точки с записью StockMovement.
+3. Асинхронность (async_supplier_check):
+   - Параллельный опрос 3 поставщиков через aiohttp.ClientSession + asyncio.gather().
+4. WebSocket (Django Channels + Uvicorn):
+   - ProtocolTypeRouter в asgi.py + OrderStatusConsumer на ws://127.0.0.1:8000/ws/orders/.
+   - ASGIStaticFilesHandler для корректной отдачи статики админки под Uvicorn.
+
 -------------------------------------------------------------------
-[4. ЭТАП 4: РУЧНАЯ СЕРИАЛИЗАЦИЯ (CBV) И НАПОЛНЕНИЕ БАЗЫ (SEED)]
-1. Закрытие Части 2 конспекта (forms.py + CBV в views.py):
-   - Создана модельная форма ServiceForm (ModelForm).
-   - Классы ManualServiceListView и ManualServiceDetailView (наследники View) с декоратором @method_decorator(csrf_exempt, name='dispatch').
-   - Реализована ручная упаковка списка в словарь JsonResponse({'services': ...}) и обновление через ServiceForm(data, instance=s).
-2. Демо-наполнение базы данных (/api/seed-database/):
-   - Автоматически создает 2 точки в Сургуте (ул. Ленина, 15 и ТРЦ Сити Молл), профили сотрудников (Вадим - admin, Алексей - master), открытую смену Shift, физлицо (VIP) и юрлицо (ООО «СеверЛогистик»), аппарат клиента iPhone 13 Pro с техпаспортом (79% АКБ) и комплектацией, аппарат-донор (с кредитом 4000 руб.), запчасти на складе и активный заказ-наряд #1 с диагностикой, работами, установленными деталями и частичной оплатой 10 000 руб.
-===================================================================
+[4. ЭТАП 4: РУЧНАЯ СЕРИАЛИЗАЦИЯ (CBV + ModelForm) И SEED]
+- ServiceForm (forms.py) + ManualServiceListView / ManualServiceDetailView (views.py).
+- POST /api/seed-database/ наполняет БД демо-данными zmart-serv (2 точки в Сургуте,
+  сотрудники, смена, клиенты физ/юрлицо, донор, склад, активный заказ #1).
+
 -------------------------------------------------------------------
-[5. ЭТАП 5: РАЗДАЧА СТАТИКИ ПОД UVICORN (ASGIStaticFilesHandler)]
-- При запуске через ASGI-сервер Uvicorn стандартный get_asgi_application() не обслуживает /static/, из-за чего панель /admin/ отдает 404 на CSS-файлы.
-- В PROJserv/asgi.py добавлена обертка ASGIStaticFilesHandler(get_asgi_application()), что обеспечивает корректную работу стилей админки и статики фронтенда одновременно с WebSocket.
+[5. ЭТАП 5: РАЗДЕЛЕНИЕ НА 2 DJANGO-СЕРВИСА И SOFT B&W UI]
+- Бэкенд (PROJserv, порт 8000): чистый DRF API + WebSocket.
+- Фронтенд (FRONTserv, порт 8001): отдельный Django-проект (APPfront) с паттерном
+  API Gateway (api_gateway_proxy через requests) и мягким ЧБ-интерфейсом zmart-serv.
+
+-------------------------------------------------------------------
+[6. ЭТАП 6: ПОЛИРОВКА, РЕБРЕНДИНГ В zmart-serv И АВТОТЕСТЫ]
+- Ребрендинг UI и сидера в zmart-serv (логотип ZS).
+- Удалён старый черновой шаблон из бэкенда, вычищены лишние импорты и опечатки.
+- Исправлен наивный datetime в orders_by_period, пересохранены requirements.txt (UTF-8).
+- Написаны модульные тесты API в PROJserv/APPserv/tests.py.
+
+===================================================================
+[8. ЧЕК-ЛИСТ РЕАЛИЗОВАННОГО ДЛЯ ЛАБЫ И КУРСОВОЙ (ЧТО СКРИНИТЬ)]
+===================================================================
+
+1. Двухзвенная архитектура (2 отдельных сервера и 2 окружения):
+   - Где в коде: PROJserv/ (порт 8000) и FRONTserv/ (порт 8001), FRONTserv/APPfront/views.py.
+   - Что скринить: два открытых терминала VS Code рядом — Uvicorn на 8000 с 200 OK
+     и Django runserver на 8001 с 200 OK + дерево папок в проводнике.
+
+2. Главный интерфейс zmart-serv (Soft B&W Minimal) и WebSocket:
+   - Где в коде: FRONTserv/APPfront/templates/index.html, PROJserv/APPserv/consumer.py, asgi.py.
+   - Что скринить:
+     а) Вкладка «Заказы и Приём» с зелёным индикатором «Live WS» и Заказом #1;
+     б) Момент смены статуса заказа в выпадающем списке + всплывающий чёрный toast «WebSocket: Заказ #1 переведен...».
+
+3. REST-правила (конечное множество в пути + query-фильтр):
+   - Где в коде: RepairOrderViewSet.orders_by_period и ClientViewSet.find_by_phone (APPserv/views.py).
+   - Что скринить:
+     а) Фильтрация заказов кнопками «Неделя / Месяц / Год» на вкладке «Заказы и Приём»;
+     б) Вкладка «Клиенты и Аппараты» — поиск по цифрам «912» (запрос /api/clients/by-phone/?phone=912).
+
+4. Склад, разбор доноров и финансовый контур:
+   - Где в коде: DonorViewSet.disassemble, PaymentViewSet.apply_donor_credit, ShiftViewSet.close_shift.
+   - Что скринить:
+     а) Вкладка «Склад и Доноры» (остатки по филиалу и кнопки разбора/зачёта донора);
+     б) Вкладка «Касса, Прайс и Async» — закрытая смена со сверкой кассы.
+
+5. Ручная сериализация (CBV + ModelForm) и асинхронный aiohttp:
+   - Где в коде: ManualServiceListView, async_supplier_check (APPserv/views.py), APPserv/forms.py.
+   - Что скринить: на вкладке «Касса, Прайс и Async» — добавленная услуга в таблице прайса
+     и результат кнопки «Запустить опрос» (котировки 3 поставщиков, сумма и средняя цена).
+
+6. Аутентификация, права доступа, админка и автотесты:
+   - Где в коде: APPserv/permissions.py, APPserv/apps.py, APPserv/tests.py.
+   - Что скринить:
+     а) Вывод команды `python manage.py test` в терминале (Ran 3 tests ... OK);
+     б) Панель http://127.0.0.1:8000/admin/ со всеми моделями сервисного центра.
 ===================================================================
