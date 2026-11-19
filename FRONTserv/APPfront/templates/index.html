@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixMaster Studio — Сервисный центр</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f6f6f4;
+            --bg-card: #ffffff;
+            --bg-subtle: #f1f1ef;
+            --text-primary: #18181b;
+            --text-secondary: #71717a;
+            --text-muted: #a1a1aa;
+            --border-soft: #e4e4e7;
+            --accent-black: #18181b;
+            --accent-hover: #27272a;
+            --radius-lg: 22px;
+            --radius-md: 14px;
+            --radius-pill: 999px;
+            --shadow-soft: 0 4px 24px -4px rgba(24, 24, 27, 0.04), 0 2px 6px -1px rgba(24, 24, 27, 0.02);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .topbar {
+            max-width: 1320px;
+            margin: 18px auto 0;
+            padding: 14px 24px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            background: var(--accent-black);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .ws-pill {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 5px 12px;
+            border-radius: var(--radius-pill);
+            background: var(--bg-subtle);
+            color: var(--text-secondary);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ws-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #a1a1aa;
+        }
+
+        .ws-pill.online {
+            background: #18181b;
+            color: #ffffff;
+        }
+
+        .ws-pill.online .ws-dot {
+            background: #4ade80;
+            box-shadow: 0 0 8px #4ade80;
+        }
+
+        .top-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .token-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-subtle);
+            border-radius: var(--radius-pill);
+            padding: 4px 14px;
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .token-box:focus-within {
+            border-color: #d4d4d8;
+            background: #fff;
+        }
+
+        .token-box span {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-right: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .token-box input {
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            width: 220px;
+            outline: none;
+        }
+
+        .nav-container {
+            max-width: 1320px;
+            margin: 16px auto 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav.pill-nav {
+            background: #ebebea;
+            padding: 5px;
+            border-radius: var(--radius-pill);
+            display: inline-flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        nav.pill-nav button {
+            background: transparent;
+            border: none;
+            padding: 9px 20px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        nav.pill-nav button:hover {
+            color: var(--text-primary);
+        }
+
+        nav.pill-nav button.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        main {
+            max-width: 1320px;
+            margin: 22px auto 48px;
+            padding: 0 4px;
+        }
+
+        .tab-section {
+            display: none;
+            animation: fadeIn 0.22s ease;
+        }
+
+        .tab-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid rgba(228, 228, 231, 0.7);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .card h3 {
+            margin: 0 0 18px 0;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-md);
+            background: var(--bg-subtle);
+            font-size: 13px;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.18s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            background: #fff;
+            border-color: var(--accent-black);
+            box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.06);
+        }
+
+        button.btn {
+            padding: 9px 16px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-soft);
+            background: #ffffff;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.18s ease;
+        }
+
+        button.btn:hover {
+            background: var(--bg-subtle);
+            border-color: #d4d4d8;
+        }
+
+        button.btn-primary {
+            background: var(--accent-black);
+            color: #ffffff;
+            border-color: var(--accent-black);
+        }
+
+        button.btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        button.btn-soft {
+            background: var(--bg-subtle);
+            border-color: transparent;
+            color: var(--text-primary);
+        }
+
+        button.btn-soft:hover {
+            background: #e4e4e7;
+        }
+
+        button.btn-sm {
+            padding: 6px 13px;
+            font-size: 12px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 14px 12px;
+            border-bottom: 1px solid #f1f1ef;
+            vertical-align: middle;
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: #fafaf9;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            border-radius: var(--radius-pill);
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+        }
+
+        .badge::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .badge-in_repair, .badge-diagnostics {
+            background: #27272a;
+            color: #ffffff;
+        }
+
+        .badge-ready, .badge-paid, .badge-active {
+            background: #e4e4e7;
+            color: #18181b;
+        }
+
+        .badge-issued, .badge-disassembled {
+            background: #f4f4f5;
+            color: #71717a;
+        }
+
+        .badge-received, .badge-approval {
+            background: #ffffff;
+            border: 1px solid #d4d4d8;
+            color: #18181b;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .select-pill {
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-soft);
+            background: var(--bg-subtle);
+            font-size: 12px;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--accent-black);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+            display: none;
+            z-index: 100;
+        }
+
+        .link-subtle {
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            transition: all 0.15s;
+        }
+
+        .link-subtle:hover {
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 960px) {
+            .grid, .grid-2 { grid-template-columns: 1fr; }
+            .topbar { margin: 10px; }
+            main { padding: 0 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="brand">
+        <div class="brand-logo">FM</div>
+        <span>FixMaster Studio</span>
+        <span id="wsBadge" class="ws-pill"><span class="ws-dot"></span><span id="wsText">WS: подключение</span></span>
+    </div>
+    <div class="top-controls">
+        <div class="token-box">
+            <span>Token</span>
+            <input type="text" id="tokenInput" value="{{ zms_token }}" placeholder="DRF Token ZMS">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="seedDatabase()">Заполнить демо-БД</button>
+        <a href="http://127.0.0.1:8000/admin/" target="_blank" class="link-subtle">Админка API ↗</a>
+    </div>
+</header>
+
+<div class="nav-container">
+    <nav class="pill-nav">
+        <button class="active" onclick="switchTab('ordersTab', this)">Заказы и Приём</button>
+        <button onclick="switchTab('clientsTab', this)">Клиенты и Аппараты</button>
+        <button onclick="switchTab('stockTab', this)">Склад и Доноры</button>
+        <button onclick="switchTab('financeTab', this)">Касса, Прайс и Async</button>
+    </nav>
+</div>
+
+<main>
+    <section id="ordersTab" class="tab-section active">
+        <div class="grid">
+            <div class="card">
+                <h3>Новый заказ-наряд</h3>
+                <form onsubmit="createOrder(event)">
+                    <div class="form-group">
+                        <label>Клиент</label>
+                        <select id="orderClientSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Экземпляр устройства</label>
+                        <select id="orderDeviceSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Точка приёма</label>
+                        <select id="orderTerminalSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ответственный сотрудник</label>
+                        <select id="orderEmployeeSelect" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Персональная скидка (₽)</label>
+                        <input type="number" id="orderDiscount" value="0" step="50">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 6px;">Создать заказ-наряд</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="toolbar">
+                    <h3 style="margin: 0;">Журнал заказов</h3>
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <input type="date" id="periodDate" value="2026-11-10" class="select-pill">
+                        <button class="btn btn-soft btn-sm" onclick="loadOrdersByPeriod('week')">Неделя</button>
+                        <button class="btn btn-soft btn-sm" onclick="loadOrdersByPeriod('month')">Месяц</button>
+                        <button class="btn btn-soft btn-sm" onclick="loadOrdersByPeriod('year')">Год</button>
+                        <button class="btn btn-primary btn-sm" onclick="loadOrders()">Все</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Клиент и Устройство</th>
+                                <th>Состав ремонта</th>
+                                <th>Баланс заказа</th>
+                                <th>Статус</th>
+                                <th>Управление</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="clientsTab" class="tab-section">
+        <div class="grid">
+            <div>
+                <div class="card">
+                    <h3>Регистрация клиента</h3>
+                    <form onsubmit="createClient(event)">
+                        <div class="form-group">
+                            <label>ФИО или Компания</label>
+                            <input type="text" id="clientName" required placeholder="Например, Смирнов Алексей">
+                        </div>
+                        <div class="form-group">
+                            <label>Категория</label>
+                            <select id="clientType">
+                                <option value="individual">Физическое лицо</option>
+                                <option value="legal">Юридическое лицо</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Контактный телефон</label>
+                            <input type="text" id="clientPhone" required placeholder="+79001234567">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 4px;">Добавить клиента</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>Привязка устройства</h3>
+                    <form onsubmit="createDeviceUnit(event)">
+                        <div class="form-group">
+                            <label>Владелец</label>
+                            <select id="unitClientSelect" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Модель по каталогу</label>
+                            <select id="unitModelSelect" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>IMEI / Серийный номер</label>
+                            <input type="text" id="unitImei" required placeholder="354890001122334">
+                        </div>
+                        <div class="form-group">
+                            <label>Цвет корпуса</label>
+                            <input type="text" id="unitColor" value="Graphite">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 4px;">Сохранить аппарат</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="toolbar">
+                    <h3 style="margin: 0;">Клиентская база</h3>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="phoneSearchInput" placeholder="Поиск по цифрам телефона..." class="select-pill" style="width: 210px;">
+                        <button class="btn btn-primary btn-sm" onclick="searchClientByPhone()">Найти</button>
+                        <button class="btn btn-soft btn-sm" onclick="loadClients()">Сброс</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Клиент</th>
+                                <th>Профиль</th>
+                                <th>Теги</th>
+                                <th>Каналы связи</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="stockTab" class="tab-section">
+        <div class="grid-2">
+            <div class="card">
+                <div class="toolbar">
+                    <h3 style="margin: 0;">Складской остаток</h3>
+                    <button class="btn btn-soft btn-sm" onclick="loadStock()">Обновить</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Филиал</th>
+                                <th>Позиция</th>
+                                <th>На складе</th>
+                                <th>Резерв</th>
+                                <th>Доступно</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="toolbar">
+                    <h3 style="margin: 0;">Учет доноров</h3>
+                    <button class="btn btn-soft btn-sm" onclick="loadDonors()">Обновить</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Аппарат-донор</th>
+                                <th>Статус</th>
+                                <th>Депозит</th>
+                                <th>Операции</th>
+                            </tr>
+                        </thead>
+                        <tbody id="donorsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="financeTab" class="tab-section">
+        <div class="grid-2">
+            <div>
+                <div class="card">
+                    <div class="toolbar">
+                        <h3 style="margin: 0;">Кассовые смены</h3>
+                        <button class="btn btn-soft btn-sm" onclick="loadShifts()">Обновить</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Смена</th>
+                                    <th>Открытие</th>
+                                    <th>Размен</th>
+                                    <th>Сверка</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shiftsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Асинхронный мониторинг цен (aiohttp)</h3>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-top: 0;">Неблокирующий параллельный опрос 3 поставщиков через <code class="mono">asyncio.gather</code>.</p>
+                    <button class="btn btn-primary btn-sm" onclick="checkAsyncSuppliers()">Запустить опрос</button>
+                    <div id="asyncResultBox" class="mono" style="margin-top: 14px; background: var(--bg-subtle); padding: 14px 16px; border-radius: var(--radius-md); color: var(--text-primary);">
+                        Ожидание запуска...
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Прайс-лист услуг (CBV + ModelForm)</h3>
+                <form onsubmit="createManualService(event)" style="display: grid; grid-template-columns: 1fr 2fr 1fr auto; gap: 8px; margin-bottom: 18px;">
+                    <input type="text" id="srvCode" placeholder="SRV-05" required class="select-pill" style="border-radius: 12px; padding: 9px 12px;">
+                    <input type="text" id="srvTitle" placeholder="Наименование работы" required class="select-pill" style="border-radius: 12px; padding: 9px 12px;">
+                    <input type="number" id="srvPrice" placeholder="Цена ₽" required class="select-pill" style="border-radius: 12px; padding: 9px 12px;">
+                    <button type="submit" class="btn btn-primary btn-sm">Добавить</button>
+                </form>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Артикул</th>
+                                <th>Наименование услуги</th>
+                                <th>Раздел</th>
+                                <th>Тариф</th>
+                            </tr>
+                        </thead>
+                        <tbody id="servicesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div id="toastBox" class="toast"></div>
+
+<script>
+    let ws = null;
+
+    function showToast(msg) {
+        const box = document.getElementById('toastBox');
+        box.textContent = msg;
+        box.style.display = 'block';
+        setTimeout(() => { box.style.display = 'none'; }, 3200);
+    }
+
+    function getHeaders() {
+        const token = document.getElementById('tokenInput').value.trim();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+            headers['Authorization'] = 'Token ' + token;
+        }
+        return headers;
+    }
+
+    async function apiRequest(url, method = 'GET', body = null) {
+        const options = { method, headers: getHeaders() };
+        if (body) options.body = JSON.stringify(body);
+        const res = await fetch(url, options);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            showToast('Внимание: ' + (data.detail || JSON.stringify(data)));
+            throw new Error(data.detail || 'API Error');
+        }
+        return data;
+    }
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('nav.pill-nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function initWebSocket() {
+        ws = new WebSocket('ws://127.0.0.1:8000/ws/orders/');
+        const badge = document.getElementById('wsBadge');
+        const text = document.getElementById('wsText');
+
+        ws.onopen = () => {
+            text.textContent = 'Live WS';
+            badge.classList.add('online');
+        };
+        ws.onmessage = (e) => {
+            const payload = JSON.parse(e.data);
+            showToast(`WebSocket: Заказ #${payload.order_id} переведен в «${payload.status}»`);
+            loadOrders();
+        };
+        ws.onclose = () => {
+            text.textContent = 'WS офлайн';
+            badge.classList.remove('online');
+        };
+    }
+
+    async function seedDatabase() {
+        const data = await apiRequest('/api/seed-database/', 'POST', {});
+        showToast(data.message);
+        await loadAllData();
+    }
+
+    async function loadOrders(customUrl = '/api/orders/') {
+        const orders = await apiRequest(customUrl);
+        const tbody = document.getElementById('ordersTableBody');
+        if (!orders.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-secondary); text-align:center; padding:28px;">Заказов пока нет. Нажмите «Заполнить демо-БД» в верхней панели.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = orders.map(o => {
+            const worksList = (o.works || []).map(w => `<div>• ${w.service_title} <span style="color:var(--text-secondary);">(${w.price} ₽)</span></div>`).join('');
+            const partsList = (o.installed_parts || []).map(p => `<div>+ ${p.part_name} <span style="color:var(--text-secondary);">(${p.price} ₽)</span></div>`).join('');
+            return `
+                <tr>
+                    <td class="mono"><strong>#${o.id}</strong></td>
+                    <td>
+                        <div style="font-weight:600;">${o.client_detail?.full_name || 'Клиент #' + o.client}</div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">
+                            ${o.device_detail?.model_detail?.brand || ''} ${o.device_detail?.model_detail?.model_name || ''}
+                            <span class="mono" style="color:var(--text-muted);"> · ${o.device_detail?.imei || ''}</span>
+                        </div>
+                    </td>
+                    <td style="font-size:12px; line-height:1.6;">${worksList}${partsList || '<span style="color:var(--text-muted);">На диагностике</span>'}</td>
+                    <td>
+                        <div style="font-weight:700;">${o.calculated_total} ₽</div>
+                        <div style="font-size:12px; color:var(--text-secondary);">Внесено: ${o.paid_total} ₽</div>
+                        <div style="font-size:12px; font-weight:600; color:${o.balance_due > 0 ? '#18181b' : '#a1a1aa'};">К оплате: ${o.balance_due} ₽</div>
+                    </td>
+                    <td><span class="badge badge-${o.status}">${o.status}</span></td>
+                    <td>
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <select class="select-pill" onchange="changeOrderStatus(${o.id}, this.value)">
+                                <option value="">Статус...</option>
+                                <option value="diagnostics">diagnostics</option>
+                                <option value="in_repair">in_repair</option>
+                                <option value="ready">ready</option>
+                                <option value="issued">issued</option>
+                            </select>
+                            ${o.balance_due > 0 ? `<button class="btn btn-primary btn-sm" onclick="payOrderBalance(${o.id}, ${o.balance_due})">Оплатить</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    async function loadOrdersByPeriod(period) {
+        const fromDate = document.getElementById('periodDate').value;
+        await loadOrders(`/api/orders/period/${period}/${fromDate}/`);
+    }
+
+    async function changeOrderStatus(orderId, newStatus) {
+        if (!newStatus) return;
+        await apiRequest(`/api/orders/${orderId}/transition/`, 'POST', {
+            status: newStatus,
+            comment: 'Обновлено оператором'
+        });
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ order_id: orderId, status: newStatus }));
+        } else {
+            loadOrders();
+        }
+    }
+
+    async function payOrderBalance(orderId, amount) {
+        await apiRequest('/api/payments/', 'POST', {
+            order: orderId,
+            amount: amount,
+            currency: 'RUB',
+            method: 'card'
+        });
+        showToast(`Оплата ${amount} ₽ по заказу #${orderId} принята`);
+        loadOrders();
+    }
+
+    async function createOrder(e) {
+        e.preventDefault();
+        await apiRequest('/api/orders/', 'POST', {
+            client: parseInt(document.getElementById('orderClientSelect').value),
+            device_unit: parseInt(document.getElementById('orderDeviceSelect').value),
+            terminal: parseInt(document.getElementById('orderTerminalSelect').value),
+            accepted_by: parseInt(document.getElementById('orderEmployeeSelect').value),
+            status: 'received',
+            discount_amount: document.getElementById('orderDiscount').value
+        });
+        showToast('Заказ-наряд оформлен');
+        loadOrders();
+    }
+
+    async function loadClients(customUrl = '/api/clients/') {
+        const clients = await apiRequest(customUrl);
+        const tbody = document.getElementById('clientsTableBody');
+        tbody.innerHTML = clients.map(c => `
+            <tr>
+                <td class="mono">#${c.id}</td>
+                <td style="font-weight:600;">${c.full_name}</td>
+                <td style="color:var(--text-secondary);">${c.client_type === 'legal' ? 'Юрлицо' : 'Физлицо'}</td>
+                <td>${(c.tags_detail || []).map(t => `<span class="badge">${t.title}</span>`).join(' ')}</td>
+                <td style="font-size:12px;">${(c.contacts || []).map(cnt => `<span style="color:var(--text-secondary);">${cnt.channel}:</span> <strong class="mono">${cnt.value}</strong>`).join('<br>')}</td>
+            </tr>
+        `).join('');
+
+        const clientOptions = clients.map(c => `<option value="${c.id}">${c.full_name}</option>`).join('');
+        document.getElementById('orderClientSelect').innerHTML = clientOptions;
+        document.getElementById('unitClientSelect').innerHTML = clientOptions;
+    }
+
+    async function searchClientByPhone() {
+        const phone = document.getElementById('phoneSearchInput').value.trim();
+        if (!phone) return loadClients();
+        await loadClients(`/api/clients/by-phone/?phone=${encodeURIComponent(phone)}`);
+    }
+
+    async function createClient(e) {
+        e.preventDefault();
+        const client = await apiRequest('/api/clients/', 'POST', {
+            full_name: document.getElementById('clientName').value,
+            client_type: document.getElementById('clientType').value
+        });
+        await apiRequest('/api/client-contacts/', 'POST', {
+            client: client.id,
+            channel: 'phone',
+            kind: 'personal',
+            value: document.getElementById('clientPhone').value,
+            is_primary: true
+        });
+        e.target.reset();
+        showToast('Клиент зарегистрирован');
+        loadClients();
+    }
+
+    async function createDeviceUnit(e) {
+        e.preventDefault();
+        await apiRequest('/api/device-units/', 'POST', {
+            client: parseInt(document.getElementById('unitClientSelect').value),
+            device_model: parseInt(document.getElementById('unitModelSelect').value),
+            imei: document.getElementById('unitImei').value,
+            color: document.getElementById('unitColor').value,
+            ownership_status: 'own'
+        });
+        e.target.reset();
+        showToast('Устройство привязано к клиенту');
+        loadDictionaries();
+    }
+
+    async function loadStock() {
+        const items = await apiRequest('/api/stock-items/');
+        document.getElementById('stockTableBody').innerHTML = items.map(s => `
+            <tr>
+                <td style="color:var(--text-secondary);">Точка #${s.terminal}</td>
+                <td style="font-weight:600;">${s.part_name}</td>
+                <td>${s.quantity_in} шт.</td>
+                <td style="color:var(--text-secondary);">${s.quantity_reserved} шт.</td>
+                <td><span class="badge badge-ready">${s.available_qty} шт.</span></td>
+            </tr>
+        `).join('');
+    }
+
+    async function loadDonors() {
+        const donors = await apiRequest('/api/donors/');
+        document.getElementById('donorsTableBody').innerHTML = donors.map(d => `
+            <tr>
+                <td class="mono">#${d.id}</td>
+                <td>
+                    <div style="font-weight:600;">${d.device_detail?.model_detail?.brand || ''} ${d.device_detail?.model_detail?.model_name || ''}</div>
+                    <div class="mono" style="font-size:11px; color:var(--text-secondary);">${d.device_detail?.serial_number || ''}</div>
+                </td>
+                <td><span class="badge badge-${d.status}">${d.status}</span></td>
+                <td style="font-weight:700;">${d.donor_credit} ₽</td>
+                <td>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        ${d.status === 'received' ? `<button class="btn btn-soft btn-sm" onclick="disassembleDonor(${d.id})">Разобрать</button>` : ''}
+                        ${parseFloat(d.donor_credit) > 0 ? `<button class="btn btn-primary btn-sm" onclick="applyDonorCredit(${d.id})">Зачесть в #1</button>` : ''}
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function disassembleDonor(donorId) {
+        await apiRequest(`/api/donors/${donorId}/disassemble/`, 'POST', {
+            terminal_id: 1,
+            part_ids: [1, 2]
+        });
+        showToast(`Донор #${donorId} разобран на комплектующие`);
+        loadDonors();
+        loadStock();
+    }
+
+    async function applyDonorCredit(donorId) {
+        await apiRequest('/api/payments/apply-donor-credit/', 'POST', {
+            order_id: 1,
+            donor_id: donorId
+        });
+        showToast('Депозит донора зачтен в Заказ #1');
+        loadDonors();
+        loadOrders();
+    }
+
+    async function loadShifts() {
+        const shifts = await apiRequest('/api/shifts/');
+        document.getElementById('shiftsTableBody').innerHTML = shifts.map(sh => `
+            <tr>
+                <td class="mono">#${sh.id}</td>
+                <td style="color:var(--text-secondary); font-size:12px;">${new Date(sh.started_at).toLocaleString('ru-RU')}</td>
+                <td>${sh.opening_cash} ₽</td>
+                <td style="font-weight:700;">${sh.closing_cash ? sh.closing_cash + ' ₽' : 'В работе'}</td>
+                <td>
+                    ${!sh.ended_at ? `<button class="btn btn-primary btn-sm" onclick="closeShift(${sh.id})">Закрыть смену</button>` : '<span class="badge">Закрыта</span>'}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function closeShift(shiftId) {
+        await apiRequest(`/api/shifts/${shiftId}/close/`, 'POST', {});
+        showToast(`Смена #${shiftId} закрыта`);
+        loadShifts();
+    }
+
+    async function loadManualServices() {
+        const data = await apiRequest('/api/manual-services/');
+        document.getElementById('servicesTableBody').innerHTML = (data.services || []).map(s => `
+            <tr>
+                <td class="mono" style="color:var(--text-secondary);">${s.code}</td>
+                <td style="font-weight:600;">${s.title}</td>
+                <td style="color:var(--text-secondary);">${s.category}</td>
+                <td style="font-weight:700;">${s.base_price} ₽</td>
+            </tr>
+        `).join('');
+    }
+
+    async function createManualService(e) {
+        e.preventDefault();
+        await apiRequest('/api/manual-services/', 'POST', {
+            code: document.getElementById('srvCode').value,
+            title: document.getElementById('srvTitle').value,
+            category: 'Сервис',
+            base_price: document.getElementById('srvPrice').value,
+            standard_duration_minutes: 60
+        });
+        e.target.reset();
+        showToast('Услуга добавлена в прайс');
+        loadManualServices();
+    }
+
+    async function checkAsyncSuppliers() {
+        const box = document.getElementById('asyncResultBox');
+        box.textContent = 'Запрос котировок через aiohttp...';
+        const data = await apiRequest('/api/async-supplier-check/');
+        box.textContent = `Ответы поставщиков: [${data.quotes.join(' ₽, ')} ₽]  ·  Сумма: ${data.sum} ₽  ·  Средняя: ${data.average_part_cost} ₽`;
+    }
+
+    async function loadDictionaries() {
+        const [units, models, terminals, employees] = await Promise.all([
+            apiRequest('/api/device-units/'),
+            apiRequest('/api/device-models/'),
+            apiRequest('/api/terminals/'),
+            apiRequest('/api/employees/')
+        ]);
+
+        document.getElementById('orderDeviceSelect').innerHTML = units.map(u =>
+            `<option value="${u.id}">${u.model_detail?.brand || ''} ${u.model_detail?.model_name || ''} (${u.imei || u.serial_number})</option>`
+        ).join('');
+        document.getElementById('unitModelSelect').innerHTML = models.map(m =>
+            `<option value="${m.id}">${m.brand} ${m.model_name}</option>`
+        ).join('');
+        document.getElementById('orderTerminalSelect').innerHTML = terminals.map(t =>
+            `<option value="${t.id}">${t.name}</option>`
+        ).join('');
+        document.getElementById('orderEmployeeSelect').innerHTML = employees.map(emp =>
+            `<option value="${emp.id}">${emp.full_name}</option>`
+        ).join('');
+    }
+
+    async function loadAllData() {
+        try {
+            await Promise.all([
+                loadOrders(),
+                loadClients(),
+                loadDictionaries(),
+                loadStock(),
+                loadDonors(),
+                loadShifts(),
+                loadManualServices()
+            ]);
+        } catch (e) {}
+    }
+
+    initWebSocket();
+    loadAllData();
+</script>
+</body>
+</html>
