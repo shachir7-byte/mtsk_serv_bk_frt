@@ -12,3 +12,5 @@ __pycache__/
 .idea/
 PROJECT_SNAPSHOT.txt
 dump_project.py
+PROJECT_SNAPSHOT*.txt
+DEFENSE_GUIDE.txtдеф.txt
